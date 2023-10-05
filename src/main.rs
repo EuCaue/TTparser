@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, error, fs};
+use std::{collections::HashMap, env, fs};
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct Base16Colors {
@@ -11,6 +11,7 @@ struct Options {
     kitty_config_path: String,
     foot_output_folder: String,
     alacritty_output_folder: String,
+    terminal_output: String,
     theme_name: String,
 }
 
@@ -21,6 +22,7 @@ fn parse_args() -> Options {
     let mut foot_output_folder: String = format!("{}/.config/foot", home);
     let mut alacritty_output_folder: String = format!("{}/.config/alacritty", home);
     let mut theme_name: String = "current-theme-port".to_string();
+    let mut terminal_output: String = "all".to_string();
 
     for arg in args.iter() {
         let parts: Vec<&str> = arg.splitn(2, '=').collect();
@@ -36,9 +38,11 @@ fn parse_args() -> Options {
                 "--foot-folder" => {
                     foot_output_folder = parts[1].to_string();
                 }
-
                 "--alacritty-folder" => {
-                    foot_output_folder = parts[1].to_string();
+                    alacritty_output_folder = parts[1].to_string();
+                }
+                "--terminal-output" => {
+                    terminal_output = parts[1].to_string();
                 }
                 _ => {
                     println!("This option not recognized: {}", parts[0]);
@@ -52,6 +56,8 @@ fn parse_args() -> Options {
                     usage: 
                     --kitty-colors-file=PATH (default $HOME/.config/kitty/current-theme.conf)
                     --foot-folder=PATH (default $HOME/.config/foot)
+                    --alacritty-folder=PATH (default $HOME/.config/alacritty)
+                    --terminal-output=all/foot/alacritty (default all)
                     "
                     );
                     std::process::exit(0);
@@ -66,16 +72,16 @@ fn parse_args() -> Options {
     Options {
         kitty_config_path,
         foot_output_folder,
+        terminal_output,
         alacritty_output_folder,
         theme_name,
     }
 }
 
-//  TODO: make this return a option
 fn create_foot_theme(
-    kitty_colors: HashMap<String, String>,
-    foot_path: String,
-    theme_name: String,
+    kitty_colors: &HashMap<String, String>,
+    foot_path: &String,
+    theme_name: &String,
 ) -> Result<(), String> {
     let file_conf_str = format!(
         "
@@ -141,9 +147,9 @@ fn create_foot_theme(
 }
 
 fn create_alacritty_theme(
-    kitty_colors: HashMap<String, String>,
-    alacritty_path: String,
-    theme_name: String,
+    kitty_colors: &HashMap<String, String>,
+    alacritty_path: &String,
+    theme_name: &String,
 ) -> Result<(), String> {
     let file_conf_str = format!(
         "
@@ -205,7 +211,7 @@ colors:
     }
 }
 
-fn kitty_colors_to_base16_colors(kitty_colors_path: String) -> HashMap<String, String> {
+fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, String> {
     let kitty_colors_file = fs::read_to_string(kitty_colors_path).unwrap();
     let mut kitty_colors: HashMap<String, String> = std::collections::HashMap::new();
 
@@ -233,23 +239,54 @@ fn kitty_colors_to_base16_colors(kitty_colors_path: String) -> HashMap<String, S
     return kitty_colors;
 }
 
-fn main() {
-    let config: Options = parse_args();
+fn create_theme(term_name: &String, args: &Options) -> Result<(), String> {
+    let kitty_colors = kitty_colors_to_base16_colors(&args.kitty_config_path);
+    let mut result_foot: Result<(), String> = Ok(());
+    let mut result_alacritty: Result<(), String> = Ok(());
 
-    let kitty_colors = kitty_colors_to_base16_colors(config.kitty_config_path);
-    println!("{:#?}", kitty_colors);
+    match term_name.as_str() {
+        "all" => {
+            result_foot =
+                create_foot_theme(&kitty_colors, &args.foot_output_folder, &args.theme_name);
+            result_alacritty = create_alacritty_theme(
+                &kitty_colors,
+                &args.alacritty_output_folder,
+                &args.theme_name,
+            );
+            println!("all");
+        }
+        "foot" => {
+            result_foot =
+                create_foot_theme(&kitty_colors, &args.foot_output_folder, &args.theme_name);
+            println!("foot");
+        }
 
-    // let result = create_foot_theme(kitty_colors, config.foot_output_folder, config.theme_name);
-    // if result.is_err() {
-    //     println!("Error: {}", result.unwrap_err());
-    // }
-
-    let result = create_alacritty_theme(
-        kitty_colors,
-        config.alacritty_output_folder,
-        config.theme_name,
-    );
-    if result.is_err() {
-        println!("Error: {}", result.unwrap_err());
+        "alacritty" => {
+            result_alacritty = create_alacritty_theme(
+                &kitty_colors,
+                &args.alacritty_output_folder,
+                &args.theme_name,
+            );
+            println!("alacritty");
+        }
+        &_ => {}
     }
+
+    match (result_foot, result_alacritty) {
+        (Ok(()), Ok(())) => Ok(()),
+        (Err(err_foot), _) => Err(err_foot),
+        (_, Err(err_alacritty)) => Err(err_alacritty),
+    }
+}
+
+fn main() {
+    let args: Options = parse_args();
+    let result_create_theme = create_theme(&args.terminal_output, &args);
+    match result_create_theme {
+        Err(err) => Err(err),
+        Ok(_) => {
+            println!("Theme {} parsed", args.theme_name);
+            Ok(())
+        }
+    };
 }
