@@ -28,28 +28,28 @@ fn parse_args() -> Options {
         let parts: Vec<&str> = arg.splitn(2, '=').collect();
         if parts.len() == 2 {
             println!("{}", parts[0]);
-            match parts[0] {
+            match parts[0].to_lowercase().as_str() {
                 "--kitty-colors-file" => {
-                    kitty_config_path = parts[1].to_string();
+                    kitty_config_path = parts[1].to_string().to_lowercase();
                 }
                 "--theme-name" => {
-                    theme_name = parts[1].to_string();
+                    theme_name = parts[1].to_string().to_lowercase();
                 }
                 "--foot-folder" => {
-                    foot_output_folder = parts[1].to_string();
+                    foot_output_folder = parts[1].to_string().to_lowercase();
                 }
                 "--alacritty-folder" => {
-                    alacritty_output_folder = parts[1].to_string();
+                    alacritty_output_folder = parts[1].to_string().to_lowercase();
                 }
                 "--terminal-output" => {
-                    terminal_output = parts[1].to_string();
+                    terminal_output = parts[1].to_string().to_lowercase();
                 }
                 _ => {
-                    println!("This option not recognized: {}", parts[0]);
+                    println!("This option not recognized: {}", parts[0].to_lowercase());
                 }
             }
         } else {
-            match parts[0] {
+            match parts[0].to_lowercase().as_str() {
                 "--help" | "-h" => {
                     println!(
                         "
@@ -63,7 +63,7 @@ fn parse_args() -> Options {
                     std::process::exit(0);
                 }
                 _ => {
-                    println!("This option not recognized: {}", parts[0]);
+                    println!("This option not recognized: {}", parts[0].to_lowercase());
                 }
             }
         }
