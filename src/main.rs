@@ -1,3 +1,4 @@
+use clap::{App, Arg};
 use std::{collections::HashMap, env, fs};
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -17,57 +18,52 @@ struct Options {
 
 fn parse_args() -> Options {
     let home = env::var("HOME").ok().unwrap();
-    let args: Vec<String> = env::args().collect();
-    let mut kitty_config_path: String = format!("{}/.config/kitty/current-theme.conf", home);
-    let mut foot_output_folder: String = format!("{}/.config/foot", home);
-    let mut alacritty_output_folder: String = format!("{}/.config/alacritty", home);
-    let mut theme_name: String = "current-theme-port".to_string();
-    let mut terminal_output: String = "all".to_string();
+    let matches = App::new("TTparser")
+        .arg(
+            Arg::with_name("kitty-colors-file")
+                .default_value(format!("{}/.config/kitty/current-theme.conf", home).as_str())
+                .short('k')
+                .long("--kitty-colors-file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("theme-name")
+                .default_value("Theme ported with TTParser.")
+                .short('t')
+                .long("--theme-name")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("foot-folder")
+                .default_value(format!("{}/.config/foot", home).as_str())
+                .short('f')
+                .long("--foot-folder")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("alacritty-folder")
+                .default_value(format!("{}/.config/alacritty", home).as_str())
+                .short('a')
+                .long("--alacritty-folder")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("terminal-output")
+                .default_value("all")
+                .short('o')
+                .long("--terminal-output")
+                .takes_value(true),
+        )
+        .get_matches();
 
-    for arg in args.iter() {
-        let parts: Vec<&str> = arg.splitn(2, '=').collect();
-        if parts.len() == 2 {
-            println!("{}", parts[0]);
-            match parts[0].to_lowercase().as_str() {
-                "--kitty-colors-file" => {
-                    kitty_config_path = parts[1].to_string().to_lowercase();
-                }
-                "--theme-name" => {
-                    theme_name = parts[1].to_string().to_lowercase();
-                }
-                "--foot-folder" => {
-                    foot_output_folder = parts[1].to_string().to_lowercase();
-                }
-                "--alacritty-folder" => {
-                    alacritty_output_folder = parts[1].to_string().to_lowercase();
-                }
-                "--terminal-output" => {
-                    terminal_output = parts[1].to_string().to_lowercase();
-                }
-                _ => {
-                    println!("This option not recognized: {}", parts[0].to_lowercase());
-                }
-            }
-        } else {
-            match parts[0].to_lowercase().as_str() {
-                "--help" | "-h" => {
-                    println!(
-                        "
-                    usage: 
-                    --kitty-colors-file=PATH (default $HOME/.config/kitty/current-theme.conf)
-                    --foot-folder=PATH (default $HOME/.config/foot)
-                    --alacritty-folder=PATH (default $HOME/.config/alacritty)
-                    --terminal-output=all/foot/alacritty (default all)
-                    "
-                    );
-                    std::process::exit(0);
-                }
-                _ => {
-                    println!("This option not recognized: {}", parts[0].to_lowercase());
-                }
-            }
-        }
-    }
+    let kitty_config_path = matches
+        .value_of("kitty-colors-file")
+        .unwrap()
+        .to_lowercase();
+    let theme_name = matches.value_of("theme-name").unwrap().to_lowercase();
+    let foot_output_folder = matches.value_of("foot-folder").unwrap().to_lowercase();
+    let alacritty_output_folder = matches.value_of("alacritty-folder").unwrap().to_lowercase();
+    let terminal_output = matches.value_of("terminal-output").unwrap().to_lowercase();
 
     Options {
         kitty_config_path,
@@ -253,12 +249,10 @@ fn create_theme(term_name: &String, args: &Options) -> Result<(), String> {
                 &args.alacritty_output_folder,
                 &args.theme_name,
             );
-            println!("all");
         }
         "foot" => {
             result_foot =
                 create_foot_theme(&kitty_colors, &args.foot_output_folder, &args.theme_name);
-            println!("foot");
         }
 
         "alacritty" => {
@@ -267,7 +261,6 @@ fn create_theme(term_name: &String, args: &Options) -> Result<(), String> {
                 &args.alacritty_output_folder,
                 &args.theme_name,
             );
-            println!("alacritty");
         }
         &_ => {}
     }
@@ -281,6 +274,8 @@ fn create_theme(term_name: &String, args: &Options) -> Result<(), String> {
 
 fn main() {
     let args: Options = parse_args();
+    println!("{:?}", args);
+
     let result_create_theme = create_theme(&args.terminal_output, &args);
     match result_create_theme {
         Err(err) => Err(err),
