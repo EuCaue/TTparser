@@ -75,7 +75,7 @@ fn parse_args() -> Options {
 }
 
 fn create_foot_theme(
-    kitty_colors: &HashMap<String, String>,
+    base16_colors: &HashMap<String, String>,
     foot_path: &String,
     theme_name: &String,
 ) -> Result<(), String> {
@@ -111,25 +111,25 @@ fn create_foot_theme(
     bright7={} # white
     ",
         theme_name,
-        kitty_colors.get("cursor").unwrap(),
-        kitty_colors.get("background").unwrap(),
-        kitty_colors.get("foreground").unwrap(),
-        kitty_colors.get("color0").unwrap(),
-        kitty_colors.get("color1").unwrap(),
-        kitty_colors.get("color2").unwrap(),
-        kitty_colors.get("color3").unwrap(),
-        kitty_colors.get("color4").unwrap(),
-        kitty_colors.get("color5").unwrap(),
-        kitty_colors.get("color6").unwrap(),
-        kitty_colors.get("color7").unwrap(),
-        kitty_colors.get("color8").unwrap(),
-        kitty_colors.get("color9").unwrap(),
-        kitty_colors.get("color10").unwrap(),
-        kitty_colors.get("color11").unwrap(),
-        kitty_colors.get("color12").unwrap(),
-        kitty_colors.get("color13").unwrap(),
-        kitty_colors.get("color14").unwrap(),
-        kitty_colors.get("color15").unwrap(),
+        base16_colors.get("cursor").unwrap(),
+        base16_colors.get("background").unwrap(),
+        base16_colors.get("foreground").unwrap(),
+        base16_colors.get("color0").unwrap(),
+        base16_colors.get("color1").unwrap(),
+        base16_colors.get("color2").unwrap(),
+        base16_colors.get("color3").unwrap(),
+        base16_colors.get("color4").unwrap(),
+        base16_colors.get("color5").unwrap(),
+        base16_colors.get("color6").unwrap(),
+        base16_colors.get("color7").unwrap(),
+        base16_colors.get("color8").unwrap(),
+        base16_colors.get("color9").unwrap(),
+        base16_colors.get("color10").unwrap(),
+        base16_colors.get("color11").unwrap(),
+        base16_colors.get("color12").unwrap(),
+        base16_colors.get("color13").unwrap(),
+        base16_colors.get("color14").unwrap(),
+        base16_colors.get("color15").unwrap(),
     );
 
     let write_path = format!("{}/{}", foot_path, theme_name.to_lowercase());
@@ -143,7 +143,7 @@ fn create_foot_theme(
 }
 
 fn create_alacritty_theme(
-    kitty_colors: &HashMap<String, String>,
+    base16_colors: &HashMap<String, String>,
     alacritty_path: &String,
     theme_name: &String,
 ) -> Result<(), String> {
@@ -177,24 +177,24 @@ colors:
     white: \"#{}\"
 ",
         theme_name,
-        kitty_colors.get("background").unwrap(),
-        kitty_colors.get("foreground").unwrap(),
-        kitty_colors.get("color0").unwrap(),
-        kitty_colors.get("color1").unwrap(),
-        kitty_colors.get("color2").unwrap(),
-        kitty_colors.get("color3").unwrap(),
-        kitty_colors.get("color4").unwrap(),
-        kitty_colors.get("color5").unwrap(),
-        kitty_colors.get("color6").unwrap(),
-        kitty_colors.get("color7").unwrap(),
-        kitty_colors.get("color8").unwrap(),
-        kitty_colors.get("color9").unwrap(),
-        kitty_colors.get("color10").unwrap(),
-        kitty_colors.get("color11").unwrap(),
-        kitty_colors.get("color12").unwrap(),
-        kitty_colors.get("color13").unwrap(),
-        kitty_colors.get("color14").unwrap(),
-        kitty_colors.get("color15").unwrap(),
+        base16_colors.get("background").unwrap(),
+        base16_colors.get("foreground").unwrap(),
+        base16_colors.get("color0").unwrap(),
+        base16_colors.get("color1").unwrap(),
+        base16_colors.get("color2").unwrap(),
+        base16_colors.get("color3").unwrap(),
+        base16_colors.get("color4").unwrap(),
+        base16_colors.get("color5").unwrap(),
+        base16_colors.get("color6").unwrap(),
+        base16_colors.get("color7").unwrap(),
+        base16_colors.get("color8").unwrap(),
+        base16_colors.get("color9").unwrap(),
+        base16_colors.get("color10").unwrap(),
+        base16_colors.get("color11").unwrap(),
+        base16_colors.get("color12").unwrap(),
+        base16_colors.get("color13").unwrap(),
+        base16_colors.get("color14").unwrap(),
+        base16_colors.get("color15").unwrap(),
     );
 
     let write_path = format!("{}/{}.yml", alacritty_path, theme_name.to_lowercase());
@@ -209,7 +209,7 @@ colors:
 
 fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, String> {
     let kitty_colors_file = fs::read_to_string(kitty_colors_path).unwrap();
-    let mut kitty_colors: HashMap<String, String> = std::collections::HashMap::new();
+    let mut base16_colors: HashMap<String, String> = std::collections::HashMap::new();
 
     for line in kitty_colors_file.lines().into_iter() {
         match line.starts_with("color")
@@ -223,7 +223,7 @@ fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, 
                 };
 
                 let line_values = line.split("#").collect::<Vec<&str>>();
-                kitty_colors.insert(
+                base16_colors.insert(
                     line_values[0].trim().to_string(),
                     line_values[1].trim().to_string(),
                 );
@@ -232,32 +232,32 @@ fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, 
         }
     }
 
-    return kitty_colors;
+    return base16_colors;
 }
 
 fn create_theme(term_name: &String, args: &Options) -> Result<(), String> {
-    let kitty_colors = kitty_colors_to_base16_colors(&args.kitty_config_path);
+    let base16_colors = kitty_colors_to_base16_colors(&args.kitty_config_path);
     let mut result_foot: Result<(), String> = Ok(());
     let mut result_alacritty: Result<(), String> = Ok(());
 
     match term_name.as_str() {
         "all" => {
             result_foot =
-                create_foot_theme(&kitty_colors, &args.foot_output_folder, &args.theme_name);
+                create_foot_theme(&base16_colors, &args.foot_output_folder, &args.theme_name);
             result_alacritty = create_alacritty_theme(
-                &kitty_colors,
+                &base16_colors,
                 &args.alacritty_output_folder,
                 &args.theme_name,
             );
         }
         "foot" => {
             result_foot =
-                create_foot_theme(&kitty_colors, &args.foot_output_folder, &args.theme_name);
+                create_foot_theme(&base16_colors, &args.foot_output_folder, &args.theme_name);
         }
 
         "alacritty" => {
             result_alacritty = create_alacritty_theme(
-                &kitty_colors,
+                &base16_colors,
                 &args.alacritty_output_folder,
                 &args.theme_name,
             );
