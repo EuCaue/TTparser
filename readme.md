@@ -1,8 +1,19 @@
 # TTparser
 
-TTparser is a minimalistic command-line tool written in Rust for converting terminal themes between various emulators and formats. Currently, it supports converting Kitty themes to Foot and Alacritty.
+<!--toc:start-->
+
+- [TTparser](#ttparser)
+  - [Usage](#usage)
+  - [Contribution](#contribution)
+  - [License](#license)
+  <!--toc:end-->
+
+TTparser is a minimalistic command-line tool written in Rust for converting terminal themes between various emulators and formats.
+Now, it supports converting Kitty and Alacritty themes to Foot, Alacritty and Kitty.
 
 ## Usage
+
+<small>you need to have **Cargo** installed.</small>
 
 1. Clone the TTparser repository:
 
@@ -22,22 +33,16 @@ TTparser is a minimalistic command-line tool written in Rust for converting term
    cargo build --release
    ```
 
-4. Run TTparser to convert a Kitty theme to Foot and Alacritty:
+4. Run TTparser to convert a Kitty theme to Alacritty only:
 
    ```bash
-   ./target/release/ttparser
+   ./target/release/ttparser -i "kitty" -f "$HOME/.config/kitty/current-theme.conf" -n "myCoolTheme"
    ```
 
-5. Run TTparser to convert a Kitty theme to Alacritty only:
+5. Help command to see all available arguments:
 
    ```bash
-   ./target/release/ttparser --terminal-output=alacritty
-   ```
-
-5. Help command:  
-
-   ```bash
-   ./target/release/ttparser --help 
+   ./target/release/ttparser --help
    ```
 
 ## Contribution
