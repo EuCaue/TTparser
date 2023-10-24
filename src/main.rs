@@ -219,10 +219,10 @@ colors:
         theme_name,
         base16_colors.get("background").unwrap(),
         base16_colors.get("foreground").unwrap(),
-        base16_colors.get("cursor").unwrap(),
         base16_colors
             .get("cursor_fg")
             .unwrap_or(&"000000".to_string()),
+        base16_colors.get("cursor").unwrap(),
         base16_colors.get("color0").unwrap(),
         base16_colors.get("color1").unwrap(),
         base16_colors.get("color2").unwrap(),
