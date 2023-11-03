@@ -1,109 +1,19 @@
-use clap::{App, Arg};
+mod args;
+use regex::Regex;
+
 use std::{
     collections::HashMap,
-    env,
     fs::{self, File},
     io::{BufRead, BufReader},
 };
+
+use args::{parse_args, Options};
 
 //  TODO: do something with this in the future.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct Base16Colors {
     hex_name: String,
     color_name: String,
-}
-
-#[derive(Debug)]
-struct Options {
-    term_input: String,
-    term_input_file: String,
-    foot_output_folder: String,
-    kitty_output_folder: String,
-    alacritty_output_folder: String,
-    terminal_output: String,
-    theme_name: String,
-}
-
-fn parse_args() -> Options {
-    let home = env::var("HOME").ok().unwrap();
-    let matches = App::new("TTparser")
-        .arg(
-            Arg::with_name("term-input")
-                .short('i')
-                .long("--term-input")
-                .possible_values(["kitty", "alacritty"])
-                .required(true)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("term-input-file")
-                .short('f')
-                .help(Some("The theme file for the terminal input."))
-                .required(true)
-                .long("--term-input-file")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("theme-name")
-                .default_value("Theme ported with TTParser.")
-                .short('n')
-                .long("--theme-name")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("foot-output-folder")
-                .default_value(format!("{}/.config/foot", home).as_str())
-                .long("--foot-output-folder")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("alacritty-output-folder")
-                .default_value(format!("{}/.config/alacritty", home).as_str())
-                .long("--alacritty-output-folder")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("kitty-output-folder")
-                .default_value(format!("{}/.config/kitty", home).as_str())
-                .long("--kitty-output-folder")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("terminal-output")
-                .default_value("all")
-                .possible_values(["all", "alacritty", "foot", "kitty"])
-                .short('o')
-                .long("--terminal-output")
-                .takes_value(true),
-        )
-        .get_matches();
-
-    let term_input = matches.value_of("term-input").unwrap().to_lowercase();
-    let term_input_file = matches.value_of("term-input-file").unwrap().to_lowercase();
-    let theme_name = matches.value_of("theme-name").unwrap().to_lowercase();
-    let kitty_output_folder = matches
-        .value_of("kitty-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let foot_output_folder = matches
-        .value_of("foot-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let alacritty_output_folder = matches
-        .value_of("alacritty-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let terminal_output = matches.value_of("terminal-output").unwrap().to_lowercase();
-
-    Options {
-        term_input,
-        term_input_file,
-        foot_output_folder,
-        kitty_output_folder,
-        terminal_output,
-        alacritty_output_folder,
-        theme_name,
-    }
 }
 
 fn create_foot_theme(
@@ -365,17 +275,49 @@ fn alacritty_colors_to_base16_colors(alacritty_colors_path: &str) -> HashMap<Str
 fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, String> {
     let kitty_colors_file = fs::read_to_string(kitty_colors_path).unwrap();
     let mut base16_colors: HashMap<String, String> = HashMap::new();
+    fn check_color(line: &str) -> bool {
+        line.contains("color")
+            || line.contains("cursor")
+            || Regex::new(r"\bbackground\b").unwrap().is_match(line)
+            || Regex::new(r"\bforeground\b").unwrap().is_match(line)
+    }
 
     for line in kitty_colors_file.trim().lines().into_iter() {
-        match line.contains("color")
-            || line.contains("cursor")
-            || line.contains("background")
-            || line.contains("foreground")
-        {
+        match check_color(line) {
             true => {
-                let line_values = line.split("#").collect::<Vec<&str>>();
+                // skipping comments
+                if line.starts_with("#") {
+                    continue;
+                };
+
+                let line_values: Vec<String> = line
+                    .split(" ")
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.replace("#", ""))
+                    .collect::<Vec<String>>();
+
+                //  checking if the color is a reference for another color token
+                if check_color(line_values[1].as_str()) {
+                    if line.contains("cursor_text_color") {
+                        base16_colors.insert(
+                            "cursor_fg".to_string(),
+                            base16_colors
+                                .get(&line_values[1].trim().to_string())
+                                .unwrap()
+                                .to_string(),
+                        );
+                        continue;
+                    }
+                    base16_colors.insert(
+                        line_values[0].trim().to_string(),
+                        base16_colors
+                            .get(&line_values[1].trim().to_string())
+                            .unwrap()
+                            .to_string(),
+                    );
+                    continue;
+                }
                 if line.contains("cursor_text_color") {
-                    println!("line: {}", line);
                     base16_colors
                         .insert("cursor_fg".to_string(), line_values[1].trim().to_string());
                     continue;
@@ -385,7 +327,7 @@ fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, 
                     line_values[1].trim().to_string(),
                 );
             }
-            false => (),
+            false => println!("Nop."),
         }
     }
     return base16_colors;
@@ -396,11 +338,9 @@ fn create_base16_colors(
     term_input_file: &String,
 ) -> HashMap<String, String> {
     if let "kitty" = term_input_name.as_str() {
-        let a = kitty_colors_to_base16_colors(term_input_file);
-        println!("aaaa {:?}", a);
-        return a;
+        kitty_colors_to_base16_colors(term_input_file)
     } else {
-        return alacritty_colors_to_base16_colors(term_input_file);
+        alacritty_colors_to_base16_colors(term_input_file)
     }
 }
 

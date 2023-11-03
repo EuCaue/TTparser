@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
  clap = {version = "3.0.0-beta.1", features = ["yaml"]}
+regex = "1.10.2"
