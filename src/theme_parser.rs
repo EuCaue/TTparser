@@ -3,10 +3,12 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 
-pub fn alacritty_colors_to_base16_colors(alacritty_colors_path: &str) -> HashMap<String, String> {
+pub type Base16Colors = HashMap<String, String>;
+
+pub fn alacritty_colors_to_base16_colors(alacritty_colors_path: &str) -> Base16Colors {
     let file = File::open(alacritty_colors_path).expect("Error opening file");
     let reader = BufReader::new(file);
-    let mut base16_colors: HashMap<String, String> = HashMap::new();
+    let mut base16_colors: Base16Colors = HashMap::new();
     let mut i: i32 = 0;
     for line in reader.lines() {
         if let Ok(line) = line {
@@ -51,9 +53,9 @@ pub fn alacritty_colors_to_base16_colors(alacritty_colors_path: &str) -> HashMap
     return base16_colors;
 }
 
-pub fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> HashMap<String, String> {
+pub fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> Base16Colors {
     let kitty_colors_file = fs::read_to_string(kitty_colors_path).unwrap();
-    let mut base16_colors: HashMap<String, String> = HashMap::new();
+    let mut base16_colors: Base16Colors = HashMap::new();
     fn check_color(line: &str) -> bool {
         line.contains("color")
             || line.contains("cursor")

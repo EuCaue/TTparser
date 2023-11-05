@@ -2,21 +2,12 @@ mod args;
 mod theme_creator;
 mod theme_parser;
 use args::{parse_args, Options};
-use std::collections::HashMap;
 use theme_creator::{create_alacritty_theme, create_foot_theme, create_kitty_theeme};
-use theme_parser::{alacritty_colors_to_base16_colors, kitty_colors_to_base16_colors};
+use theme_parser::{
+    alacritty_colors_to_base16_colors, kitty_colors_to_base16_colors, Base16Colors,
+};
 
-//  TODO: do something with this in the future.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
-struct Base16Colors {
-    hex_name: String,
-    color_name: String,
-}
-
-fn create_base16_colors(
-    term_input_name: &String,
-    term_input_file: &String,
-) -> HashMap<String, String> {
+fn create_base16_colors(term_input_name: &String, term_input_file: &String) -> Base16Colors {
     if let "kitty" = term_input_name.as_str() {
         kitty_colors_to_base16_colors(term_input_file)
     } else {
@@ -24,7 +15,7 @@ fn create_base16_colors(
     }
 }
 
-fn create_theme(term_output: &String, args: &Options) -> Result<(),String> {
+fn create_theme(term_output: &String, args: &Options) -> Result<(), String> {
     let base16_colors = create_base16_colors(&args.term_input, &args.term_input_file);
     let mut result_foot: Result<(), String> = Ok(());
     let mut result_alacritty: Result<(), String> = Ok(());
