@@ -1,7 +1,8 @@
-use std::{collections::HashMap, fs};
+use crate::theme_parser::Base16Colors;
+use std::fs;
 
 pub fn create_foot_theme(
-    base16_colors: &HashMap<String, String>,
+    base16_colors: &Base16Colors,
     foot_path: &String,
     theme_name: &String,
 ) -> Result<(), String> {
@@ -73,7 +74,7 @@ pub fn create_foot_theme(
 }
 
 pub fn create_alacritty_theme(
-    base16_colors: &HashMap<String, String>,
+    base16_colors: &Base16Colors,
     alacritty_path: &String,
     theme_name: &String,
 ) -> Result<(), String> {
@@ -146,7 +147,7 @@ colors:
 }
 
 pub fn create_kitty_theeme(
-    base16_colors: &HashMap<String, String>,
+    base16_colors: &Base16Colors,
     kitty_path: &String,
     theme_name: &String,
 ) -> Result<(), String> {

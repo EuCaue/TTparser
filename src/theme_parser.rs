@@ -80,7 +80,6 @@ pub fn kitty_colors_to_base16_colors(kitty_colors_path: &String) -> Base16Colors
         match check_color(line) {
             true => {
                 // skipping comments
-                println!("line in kitty file--> {}", line);
                 if line.starts_with("#") {
                     continue;
                 };
