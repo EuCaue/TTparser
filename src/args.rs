@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{arg, command};
 use std::env;
 
 #[derive(Debug)]
@@ -13,75 +13,44 @@ pub struct Options {
 }
 
 pub fn parse_args() -> Options {
-    let home = env::var("HOME").ok().unwrap();
-    let matches = App::new("TTparser")
+let home = env::var("HOME").ok().unwrap();
+
+    let matches = command!("TTparser")
         .arg(
-            Arg::with_name("term-input")
-                .short('i')
-                .long("--term-input")
-                .possible_values(["kitty", "alacritty"])
+            arg!(-i --"term-input" <"kitty,alacritty"> "Terminal input name").required(true)
+        )
+        .arg(
+            arg!(-f --"term-input-file" <term_input_file> "The theme file for the terminal input")
                 .required(true)
-                .takes_value(true),
         )
         .arg(
-            Arg::with_name("term-input-file")
-                .short('f')
-                .help(Some("The theme file for the terminal input."))
-                .required(true)
-                .long("--term-input-file")
-                .takes_value(true),
+            arg!(-n --"theme-name" <theme_name> "The theme name")
+                .default_value("Theme ported with TTParser."),
         )
         .arg(
-            Arg::with_name("theme-name")
-                .default_value("Theme ported with TTParser.")
-                .short('n')
-                .long("--theme-name")
-                .takes_value(true),
+            arg!(--"foot-output-folder" <foot_output_folder> "The output folder for foot [default: $HOME/.config/foot]")
         )
         .arg(
-            Arg::with_name("foot-output-folder")
-                .default_value(format!("{}/.config/foot", home).as_str())
-                .long("--foot-output-folder")
-                .takes_value(true),
+            arg!(--"alacritty-output-folder" <alacritty_output_folder> "The output folder for alacritty [default: $HOME/.config/alacritty]")
         )
         .arg(
-            Arg::with_name("alacritty-output-folder")
-                .default_value(format!("{}/.config/alacritty", home).as_str())
-                .long("--alacritty-output-folder")
-                .takes_value(true),
+            arg!(--"kitty-output-folder" <kitty_output_folder> "The output folder for kitty [default: $HOME/.config/kitty]")
+                    
         )
         .arg(
-            Arg::with_name("kitty-output-folder")
-                .default_value(format!("{}/.config/kitty", home).as_str())
-                .long("--kitty-output-folder")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("terminal-output")
+            arg!(-o --"terminal-output" <"all, alacritty, foot, kitty"> "The terminal output")
                 .default_value("all")
-                .possible_values(["all", "alacritty", "foot", "kitty"])
-                .short('o')
-                .long("--terminal-output")
-                .takes_value(true),
+                    
         )
         .get_matches();
 
-    let term_input = matches.value_of("term-input").unwrap().to_lowercase();
-    let term_input_file = matches.value_of("term-input-file").unwrap().to_lowercase();
-    let theme_name = matches.value_of("theme-name").unwrap().to_lowercase();
-    let kitty_output_folder = matches
-        .value_of("kitty-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let foot_output_folder = matches
-        .value_of("foot-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let alacritty_output_folder = matches
-        .value_of("alacritty-output-folder")
-        .unwrap()
-        .to_lowercase();
-    let terminal_output = matches.value_of("terminal-output").unwrap().to_lowercase();
+    let term_input = matches.get_one::<String>("term-input").unwrap().to_lowercase();
+    let term_input_file = matches.get_one::<String>("term-input-file").unwrap().to_lowercase();
+    let theme_name = matches.get_one::<String>("theme-name").unwrap().to_lowercase();
+    let kitty_output_folder = matches.get_one::<String>("kitty-output-folder").unwrap_or(&format!("{}/.config/kitty", home)).to_lowercase();
+    let foot_output_folder = matches.get_one::<String>("foot-output-folder").unwrap_or(&format!("{}/.config/foot", home)).to_lowercase();
+    let alacritty_output_folder = matches.get_one::<String>("alacritty-output-folder").unwrap_or(&format!("{}/.config/alacritty", home)).to_lowercase();
+    let terminal_output = matches.get_one::<String>("terminal-output").unwrap().to_lowercase();
 
     Options {
         term_input,
