@@ -42,7 +42,7 @@ pub fn create_foot_theme(
         base16_colors
             .get("cursor_fg")
             .unwrap_or(&"000000".to_string()),
-        base16_colors.get("cursor").unwrap(),
+        base16_colors.get("cursor").unwrap_or(&"FFFFFF".to_string()),
         base16_colors.get("background").unwrap(),
         base16_colors.get("foreground").unwrap(),
         base16_colors.get("color0").unwrap(),
@@ -117,7 +117,7 @@ colors:
         base16_colors
             .get("cursor_fg")
             .unwrap_or(&"000000".to_string()),
-        base16_colors.get("cursor").unwrap(),
+        base16_colors.get("cursor").unwrap_or(&"FFFFFF".to_string()),
         base16_colors.get("color0").unwrap(),
         base16_colors.get("color1").unwrap(),
         base16_colors.get("color2").unwrap(),
@@ -179,8 +179,10 @@ pub fn create_kitty_theeme(
         theme_name,
         base16_colors.get("background").unwrap(),
         base16_colors.get("foreground").unwrap(),
-        base16_colors.get("cursor").unwrap(),
-        base16_colors.get("cursor_fg").unwrap(),
+        base16_colors.get("cursor").unwrap_or(&"FFFFFF".to_string()),
+        base16_colors
+            .get("cursor_fg")
+            .unwrap_or(&"000000".to_string()),
         base16_colors.get("color0").unwrap(),
         base16_colors.get("color1").unwrap(),
         base16_colors.get("color2").unwrap(),
@@ -200,6 +202,7 @@ pub fn create_kitty_theeme(
     );
 
     let write_path = format!("{}/{}.conf", kitty_path, theme_name.to_lowercase());
+    println!("kitty_colors: from foot_theme {:#?}", write_path);
 
     println!("{}", file_conf_str);
     let result = fs::write(write_path, file_conf_str.trim());
