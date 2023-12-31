@@ -116,11 +116,18 @@ pub fn alacritty_colors_to_base16_colors(alacritty_colors_path: &str) -> Base16C
                             {
                                 continue;
                             }
-                            base16_colors.insert(
-                                format!("color{}", base16_color_number),
-                                color_hex.to_string(),
-                            );
-                            base16_color_number += 1;
+                            if let Some(color) = AlacrittyColorsNormal::from_str(color_name) {
+                                let base16_color_number: u8 = color as u8;
+                                let color_hex = color_hex.replace("#", "");
+                                base16_colors
+                                    .insert(format!("color{}", base16_color_number), color_hex);
+                            }
+                            if let Some(color) = AlacrittyColorsBright::from_str(color_name) {
+                                let base16_color_number: u8 = color as u8;
+                                let color_hex = color_hex.replace("#", "");
+                                base16_colors
+                                    .insert(format!("color{}", base16_color_number), color_hex);
+                            }
                         }
                     }
                 }
